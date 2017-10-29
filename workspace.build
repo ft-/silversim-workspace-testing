@@ -9,7 +9,7 @@
 	<property name="submodules" value="${submodules},silversim-postgresql-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-opensim-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-scripting-lsl-testing"/>
-	<property name="submodules" value="${submodules},silversim-npc-testing-dev"/>
+	<property name="submodules" value="${submodules},silversim-npc-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-packager-testing"/>
 	<target name="setup" description="Setup entire default workspace">
 		<call target="gitcloneall"/>
