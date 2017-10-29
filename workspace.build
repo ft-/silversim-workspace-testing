@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<project name="silversim-workspace" default="setup">
+	<description>Workspace setup</description>
+	<property name="git-server-base" value="https://github.com/ft-/" overwrite="false"/>
+	<property name="submodules" value="silversim-runner-testing"/>
+	<property name="submodules" value="${submodules},silversim-testing"/>
+	<property name="submodules" value="${submodules},silversim-mysql-plugin-testing"/>
+	<property name="submodules" value="${submodules},silversim-mssql-plugin-testing"/>
+	<property name="submodules" value="${submodules},silversim-postgresql-plugin-testing"/>
+	<property name="submodules" value="${submodules},silversim-opensim-plugin-testing"/>
+	<property name="submodules" value="${submodules},silversim-scripting-lsl-testing"/>
+	<property name="submodules" value="${submodules},silversim-npc-testing-dev"/>
+	<property name="submodules" value="${submodules},silversim-packager-testing"/>
+	<target name="setup" description="Setup entire default workspace">
+		<call target="gitcloneall"/>
+		<call target="init-bin"/>
+		<call target="setupall"/>
+		<call target="buildall"/>
+	</target>
+	
+	<target name="init-bin">
+		<mkdir dir="bin"/>
+	</target>
+	
+	<target name="gitcloneall" description="Retrieve all submodules">
+		<foreach item="String" in="${submodules}" delim="," property="submodule">
+			<call target="gitclone" unless="${directory::exists(submodule)}"/>
+		</foreach>
+	</target>
+	
+	<target name="gitpushall" description="Push all submodules">
+		<foreach item="Folder" in="." property="submodule">
+			<if test="${directory::exists(submodule + '/.git')}">
+				<call target="gitpush"/>
+			</if>
+		</foreach>
+	</target>
+	
+	<target name="gitpullall" description="Retrieve all submodules">
+		<foreach item="Folder" in="." property="submodule">
+			<if test="${directory::exists(submodule + '/.git')}">
+				<call target="gitpull"/>
+			</if>
+		</foreach>
+	</target>
+	
+	<target name="setupall" description="Retrieve all submodules">
+		<foreach item="String" in="${submodules}" delim="," property="submodule">
+			<call target="setupall" unless="${directory::exists(submodule)}"/>
+		</foreach>
+	</target>
+	
+	<target name="updateprebuildall" description="Update prebuild">
+		<foreach item="Folder" in="." property="subfolder">
+			<if test="${directory::exists(subfolder + '/Prebuild')}">
+				<echo message="Setting submodule to HEAD for ${subfolder}"/>
+				<exec program="git" workingdir="${subfolder}/Prebuild">
+					<arg value="checkout"/>
+					<arg value="HEAD"/>
+				</exec>
+				<echo message="Pulling changes"/>
+				<exec program="git" workingdir="${subfolder}/Prebuild">
+					<arg value="pull"/>
+					<arg value="origin"/>
+					<arg value="master"/>
+				</exec>
+				<echo message="Committing new reference"/>
+				<exec program="git" workingdir="${subfolder}" failonerror="false">
+					<arg value="commit"/>
+					<arg value="-m"/>
+					<arg value="updated prebuild"/>
+					<arg value="Prebuild"/>
+				</exec>
+			</if>
+		</foreach>
+	</target>
+	
+	<target name="buildall" description="Build all submodules">
+		<foreach item="String" in="${submodules}" delim="," property="submodule">
+			<call target="build-submodule"/>
+			<property name="already-built-${submodule}" value="true"/>
+		</foreach>
+		<foreach item="Folder" in="." property="submodule">
+			<if test="${file::exists(submodule + '/setup-project.build')}">
+				<call target="build-submodule" unless="${property::exists('already-built-' + submodule)}"/>
+			</if>
+		</foreach>
+		<foreach item="Folder" in="." property="submodule">
+			<if test="${file::exists(submodule + '/setup-project.build')}">
+				<call target="nls-submodule"/>
+			</if>
+		</foreach>
+	</target>
+	
+	<target name="allpackages" description="Installs all package description">
+		<foreach item="Folder" in="." property="submodule">
+			<if test="${file::exists(submodule + '/setup-project.build')}">
+				<call target="packages-submodule"/>
+			</if>
+		</foreach>
+	</target>
+	
+	<target name="nlsall" description="Build all submodules nls">
+		<foreach item="String" in="${submodules}" delim="," property="submodule">
+			<call target="nls-submodule"/>
+		</foreach>
+		<foreach item="Folder" in="." property="submodule">
+			<if test="${file::exists(submodule + '/setup-project.build')}">
+				<call target="nls-submodule"/>
+			</if>
+		</foreach>
+	</target>
+	
+	<target name="setup-submodule" description="Run setup on submodule setup-project.build">
+		<fail message="Please specify -D:submodule=&lt;submodule&gt;" unless="${property::exists('submodule')}"/>
+		<call target="gitclone" unless="${directory::exists(submodule)}"/>
+		<nant buildfile="${submodule}/setup-project.build" target="setup" if="${file::exists(submodule + '/Prebuild/Prebuild.exe')}">
+		</nant>
+	</target>
+	
+	<target name="build-submodule" description="Run build on submodule setup-project.build">
+		<fail message="Please specify -D:submodule=&lt;submodule&gt;" unless="${property::exists('submodule')}"/>
+		<call target="setup-submodule"/>
+		<nant buildfile="${submodule}/setup-project.build" target="build" if="${file::exists(submodule + '/Prebuild/Prebuild.exe')}">
+		</nant>
+	</target>
+	
+	<target name="packages-submodule" description="Run package install on submodule setup-project.build">
+		<fail message="Please specify -D:submodule=&lt;submodule&gt;" unless="${property::exists('submodule')}"/>
+		<call target="setup-submodule" unless="${directory::exists(submodule + '/bin')}"/>
+		<nant buildfile="${submodule}/setup-project.build" target="packages" if="${file::exists(submodule + '/Prebuild/Prebuild.exe')}">
+		</nant>
+	</target>
+	
+	<target name="gitclone" description="git clone helper">
+		<fail message="Please specify -D:submodule=&lt;submodule&gt;" unless="${property::exists('submodule')}"/>
+		<exec program="git">
+			<arg value="clone"/>
+			<arg value="--"/>
+			<arg value="${git-server-base}${submodule}"/>
+			<arg value="${submodule}"/>
+		</exec>
+		<exec program="git" workingdir="${submodule}">
+			<arg value="submodule"/>
+			<arg value="update"/>
+			<arg value="--init"/>
+		</exec>
+	</target>
+	
+	<target name="gitpush" description="git push helper">
+		<fail message="Please specify -D:submodule=&lt;submodule&gt;" unless="${property::exists('submodule')}"/>
+		<exec program="git" workingdir="${submodule}" output="remotes.tmp">
+			<arg value="remote"/>
+		</exec>
+		<foreach item="Line" in="remotes.tmp" property="remote">
+			<echo message="Pushing ${submodule} to remote ${remote}"/>
+			<exec program="git" workingdir="${submodule}">
+				<arg value="push"/>
+				<arg value="${remote}"/>
+			</exec>
+		</foreach>
+	</target>
+	
+	<target name="gitpull" description="git pull helper">
+		<fail message="Please specify -D:submodule=&lt;submodule&gt;" unless="${property::exists('submodule')}"/>
+		<echo message="Updating ${submodule}"/>
+		<exec program="git" workingdir="${submodule}">
+			<arg value="pull"/>
+		</exec>
+		<exec program="git" workingdir="${submodule}">
+			<arg value="submodule"/>
+			<arg value="update"/>
+			<arg value="--init"/>
+		</exec>
+	</target>
+	
+	<target name="nls-submodule" description="Process nls files of a submodule">
+		<fail message="Please specify -D:submodule=&lt;submodule&gt;" unless="${property::exists('submodule')}"/>
+		<call target="setup-submodule"/>
+		<nant buildfile="${submodule}/setup-project.build" target="nls">
+		</nant>
+	</target>
+	
+	<target name="check-licenseheaders" description="Check license headers">
+		<loadfile file="headers/LICENSE.cs" property="expectedheader"/>
+		<foreach item="String" in="${submodules}" delim="," property="submodule">
+			<foreach item="File" property="filename">
+				<in>
+					<items>
+						<exclude name="**/TemporaryGeneratedFile**"/>
+						<exclude name="silversim-dev/SilverSim/TargaImage/**"/>
+						<exclude name="silversim-dev/SilverSim/OpenJp2/**"/>
+						<exclude name="silversim-sharpnav-plugin-dev/SilverSim/3p-SharpNav/**"/>
+						<include name="${submodule}/**/*.cs"/>
+					</items>
+				</in>
+				<do>
+					<loadfile file="${filename}" property="filecontents"/>
+					<echo message="Header difference on ${filename}" if="${string::get-length(expectedheader) &gt; string::get-length(filecontents)}"/>
+					<if test="${string::get-length(expectedheader) &lt;= string::get-length(filecontents)}">
+						<property name="seenheader" value="${string::substring(filecontents, 0, string::get-length(expectedheader))}"/>
+						<echo message="Header difference on ${filename}" unless="${seenheader==expectedheader}"/>
+					</if>
+				</do>
+			</foreach>
+		</foreach>
+	</target>
+</project>
