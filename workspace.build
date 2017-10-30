@@ -6,6 +6,7 @@
 	<property name="submodules" value="${submodules},silversim-testing"/>
 	<property name="submodules" value="${submodules},silversim-mysql-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-mssql-plugin-testing"/>
+	<property name="submodules" value="${submodules},silversim-sqlite-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-postgresql-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-opensim-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-scripting-lsl-testing"/>
