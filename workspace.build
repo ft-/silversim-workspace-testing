@@ -81,7 +81,8 @@
 			<call target="build-submodule"/>
 			<property name="already-built-${submodule}" value="true"/>
 		</foreach>
-		<foreach item="Folder" in="." property="submodule">
+		<foreach item="Folder" in="." property="submodulefolder">
+			<property name="submodule" value="${path::get-file-name(submodulefolder)}"/>
 			<if test="${file::exists(submodule + '/setup-project.build')}">
 				<call target="build-submodule" unless="${property::exists('already-built-' + submodule)}"/>
 			</if>
