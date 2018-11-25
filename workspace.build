@@ -27,6 +27,10 @@
 	</target>
 	
 	<target name="gitcloneall" description="Retrieve all submodules">
+		<exec program="git">
+			<arg value="submodule"/>
+			<arg value="--init"/>
+		</exec>
 		<foreach item="String" in="${submodules}" delim="," property="submodule">
 			<call target="gitclone" unless="${directory::exists(submodule)}"/>
 		</foreach>
