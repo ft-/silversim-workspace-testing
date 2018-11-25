@@ -29,6 +29,7 @@
 	<target name="gitcloneall" description="Retrieve all submodules">
 		<exec program="git">
 			<arg value="submodule"/>
+			<arg value="update"/>
 			<arg value="--init"/>
 		</exec>
 		<foreach item="String" in="${submodules}" delim="," property="submodule">
