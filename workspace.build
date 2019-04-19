@@ -9,7 +9,6 @@
 	<property name="submodules" value="${submodules},silversim-sqlite-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-postgresql-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-opensim-plugin-testing"/>
-	<property name="submodules" value="${submodules},silversim-hypergrid-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-aisv3-plugin-testing"/>
 	<property name="submodules" value="${submodules},silversim-scripting-lsl-testing"/>
 	<property name="submodules" value="${submodules},silversim-npc-plugin-testing"/>
